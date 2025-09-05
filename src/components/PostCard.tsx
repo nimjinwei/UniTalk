@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, TextInput, StyleSheet, Image } from "react-native";
-import { Heart, MessageCircle, Clock, Hash, Send, Bookmark } from "lucide-react-native";
+import { Heart, MessageCircle, Clock, Hash, Send, Bookmark, BookmarkCheck } from "lucide-react-native";
 import { Avatar } from "./Avatar";
 
 type Comment = {
@@ -23,6 +23,7 @@ type Post = {
   anonymous: string;
   avatar: string;
   isLiked: boolean;
+  isSaved?: boolean;   // ✅ 新增保存状态
 };
 
 export const PostCard = ({
@@ -30,6 +31,7 @@ export const PostCard = ({
   expandedPost,
   onLike,
   onExpand,
+  onSave,   // ✅ 新增回调
   commentText,
   setCommentText,
   onComment,
@@ -38,6 +40,7 @@ export const PostCard = ({
   expandedPost: number | null;
   onLike: (id: number) => void;
   onExpand: (id: number) => void;
+  onSave: (id: number) => void;   // ✅ 新增
   commentText: string;
   setCommentText: (t: string) => void;
   onComment: (postId: number) => void;
@@ -54,37 +57,39 @@ export const PostCard = ({
         </View>
       </View>
     </View>
-    {/* 社区和标题 */}
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-  {/* 圆形头像容器 */}
-  <View
-    style={{
-      width: 30,
-      height: 30,
-      borderRadius: 15,      // 圆形
-      overflow: 'hidden',    // 圆形裁剪
-      backgroundColor: '#fff',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 5,        // 图片和文字间距
-    }}
-  >
-    <Image
-      source={{ uri: "https://www.pikpng.com/pngl/m/213-2136499_life-is-strange-logo-png.png" }}
-      style={{
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain', // 保持比例完整显示
-      }}
-    />
-  </View>
 
-  {/* 文字 */}
-  <Text style={{ color: "black", fontSize: 24, fontWeight: "bold" }}>
-    {post.CommunityName}
-  </Text>
-</View>
-    <Text style={{color:"black",fontSize:24,fontWeight:"bold"}}>{post.Title}</Text>
+    {/* 社区和标题 */}
+    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+      <View
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          overflow: "hidden",
+          backgroundColor: "#fff",
+          justifyContent: "center",
+          alignItems: "center",
+          marginRight: 5,
+        }}
+      >
+        <Image
+          source={{
+            uri: "https://www.pikpng.com/pngl/m/213-2136499_life-is-strange-logo-png.png",
+          }}
+          style={{
+            width: "100%",
+            height: "100%",
+            resizeMode: "contain",
+          }}
+        />
+      </View>
+      <Text style={{ color: "black", fontSize: 24, fontWeight: "bold" }}>
+        {post.CommunityName}
+      </Text>
+    </View>
+
+    <Text style={{ color: "black", fontSize: 24, fontWeight: "bold" }}>{post.Title}</Text>
+
     {/* 内容 */}
     <Text style={styles.content}>{post.content}</Text>
 
@@ -100,6 +105,7 @@ export const PostCard = ({
 
     {/* 操作按钮 */}
     <View style={styles.actions}>
+      {/* 点赞 */}
       <Pressable
         style={[styles.actionBtn, post.isLiked && styles.likedBtn]}
         onPress={() => onLike(post.id)}
@@ -114,11 +120,9 @@ export const PostCard = ({
         </Text>
       </Pressable>
 
+      {/* 评论 */}
       <Pressable
-        style={[
-          styles.actionBtn,
-          expandedPost === post.id && styles.activeCommentBtn,
-        ]}
+        style={[styles.actionBtn, expandedPost === post.id && styles.activeCommentBtn]}
         onPress={() => onExpand(post.id)}
       >
         <MessageCircle
@@ -133,13 +137,16 @@ export const PostCard = ({
         >
           {post.comments.length}
         </Text>
-        
       </Pressable>
-      <Bookmark
-            size={18}
-            color={expandedPost === post.id ? "#8B5CF6" : "#9CA3AF"}
-            style={{ marginLeft: 'auto' }} 
-        />
+
+      {/* 保存 */}
+      <Pressable onPress={() => onSave(post.id)} style={{ marginLeft: "auto" }}>
+        {post.isSaved ? (
+          <BookmarkCheck size={18} color="#fff" />   /* ✅ 已保存 → 实心 */
+        ) : (
+          <Bookmark size={18} color="#9CA3AF" />        /* ✅ 未保存 → 空心 */
+        )}
+    </Pressable>
     </View>
 
     {/* 评论区 */}
@@ -178,28 +185,51 @@ export const PostCard = ({
 );
 
 const styles = StyleSheet.create({
-  // 这里可以沿用你原来的样式
   card: { backgroundColor: "#8B5CF6", padding: 10, borderRadius: 16, marginBottom: 10 },
   cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   author: { fontWeight: "600", color: "#8B5CF6" },
   timeRow: { flexDirection: "row", alignItems: "center" },
   time: { marginLeft: 4, fontSize: 12, color: "#9CA3AF" },
-  content: { fontSize: 16, marginBottom: 12, color:"white",lineHeight:24 },
+  content: { fontSize: 16, marginBottom: 12, color: "white", lineHeight: 24 },
   tags: { flexDirection: "row", flexWrap: "wrap", marginBottom: 12 },
-  tagContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#F3E8FF", borderRadius: 12, padding: 6, marginRight: 6 },
+  tagContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3E8FF",
+    borderRadius: 12,
+    padding: 6,
+    marginRight: 6,
+  },
   tag: { color: "#8B5CF6", fontSize: 12, marginLeft: 4 },
   actions: { flexDirection: "row", gap: 20 },
-  actionBtn: { flexDirection: "row", alignItems: "center", padding: 8, borderRadius: 20, backgroundColor: "#8B5CF6" },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#8B5CF6",
+  },
   actionText: { marginLeft: 6, color: "#6B7280" },
   likedBtn: { backgroundColor: "#8B5CF6" },
   likedText: { color: "#FF4757" },
   activeCommentBtn: { backgroundColor: "#F3E8FF" },
   activeCommentText: { color: "#8B5CF6" },
-  commentSection: { marginTop: 12, borderTopWidth: 1, borderTopColor: "#E5E7EB", paddingTop: 12 },
+  commentSection: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    paddingTop: 12,
+  },
   commentCard: { flexDirection: "row", marginBottom: 8 },
   commentAuthor: { fontWeight: "600", color: "#8B5CF6" },
   commentTime: { fontSize: 11, color: "#9CA3AF" },
   commentInputBox: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
-  commentInput: { flex: 1, borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 20, padding: 10 },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 20,
+    padding: 10,
+  },
   commentButton: { backgroundColor: "#8B5CF6", padding: 10, borderRadius: 20 },
 });

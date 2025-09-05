@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, Pressable, StyleSheet } from "react-native";
 import { Plus } from "lucide-react-native";
 import { PostCard } from "../components/PostCard";
+import NewPostScreen from "./NewPostScreen";
 
-export const HomeScreen = ({ onNewPost }: any) => {
+export const HomeScreen = () => {
+  const [currentView, setCurrentView] = useState<"home" | "newPost">("home");
   const [expandedPost, setExpandedPost] = useState<number | null>(null);
   const [posts, setPosts] = useState([
     {
@@ -11,6 +13,7 @@ export const HomeScreen = ({ onNewPost }: any) => {
       CommunityName: "Multimedia University",
       Title: "今天的心情",
       content: "今天的天气真好 ☀️，适合出去走走！",
+      isSaved: false,
       tags: ["生活", "天气"],
       likes: 12,
       comments: [
@@ -32,6 +35,7 @@ export const HomeScreen = ({ onNewPost }: any) => {
       CommunityName: "Coding",
       Title: "学习React Native的感受",
       content: "第一次尝试 React Native，感觉还不错 😎",
+      isSaved: true,
       tags: ["技术", "学习"],
       likes: 20,
       comments: [],
@@ -42,41 +46,38 @@ export const HomeScreen = ({ onNewPost }: any) => {
     },
   ]);
 
-  // 每个帖子对应的评论输入框内容
-  const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>(
-    {}
-  );
+  const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
 
   // 点赞
   const handleLike = (id: number) => {
     setPosts((prev) =>
       prev.map((p) =>
         p.id === id
-          ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likes: p.isLiked ? p.likes - 1 : p.likes + 1,
-            }
+          ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 }
           : p
       )
     );
   };
 
-  // 展开/收起评论区
+  // 展开评论
   const handleExpand = (id: number) => {
     setExpandedPost((prev) => (prev === id ? null : id));
   };
 
-  // 更新评论输入框
+  // 保存帖子
+  const handleSave = (id: number) => {
+    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, isSaved: !p.isSaved } : p)));
+  };
+
+  // 评论输入
   const handleCommentTextChange = (id: number, text: string) => {
     setCommentTexts((prev) => ({ ...prev, [id]: text }));
   };
 
-  // 发送评论
+  // 发表评论
   const handleComment = (postId: number) => {
     const text = commentTexts[postId]?.trim();
     if (!text) return;
-
     setPosts((prev) =>
       prev.map((p) =>
         p.id === postId
@@ -85,7 +86,7 @@ export const HomeScreen = ({ onNewPost }: any) => {
               comments: [
                 ...p.comments,
                 {
-                  id: Date.now(),
+                  id: Date.now() + Math.random(),
                   author: "我",
                   content: text,
                   time: "刚刚",
@@ -96,45 +97,35 @@ export const HomeScreen = ({ onNewPost }: any) => {
           : p
       )
     );
-
-    // 清空输入框
     setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
   };
 
+  // 处理新帖子
+  const handleAddPost = (newPost: any) => {
+    setPosts((prev) => [newPost, ...prev]);
+    setCurrentView("home");
+  };
+
+  if (currentView === "newPost") {
+    return <NewPostScreen onSubmit={handleAddPost} onCancel={() => setCurrentView("home")} />;
+  }
+
   return (
     <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-      <View
-        style={{
-          backgroundColor: "#2c2c2cff",
-          paddingVertical: 10,
-          borderRadius: 20,
-          marginBottom: 16,
-          marginTop: 20,
-        }}
-      >
-        <Text
-          style={{
-            color: "white",
-            fontSize: 32,
-            fontWeight: "bold",
-            marginTop: 20,
-            paddingLeft: 10,
-          }}
-        >
-          UniTalk
-        </Text>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>UniTalk</Text>
       </View>
 
       <View style={styles.welcomeCard}>
-        <Text style={styles.welcomeTitle}>欢迎来到学生社区 🎓</Text>
+        <Text style={styles.welcomeTitle}>Welcome to UniTalk 🎓</Text>
         <Text style={styles.welcomeSubtitle}>
-          匿名分享，真实交流，找到志同道合的朋友
+          Annoymous sharing for university students, Find your community and Friends here!
         </Text>
       </View>
 
-      <Pressable style={styles.postButton} onPress={onNewPost}>
+      <Pressable style={styles.postButton} onPress={() => setCurrentView("newPost")}>
         <Plus color="black" size={20} />
-        <Text style={styles.postButtonText}>分享你的想法</Text>
+        <Text style={styles.postButtonText}>Share your idea !</Text>
       </Pressable>
 
       {posts.map((post) => (
@@ -143,6 +134,7 @@ export const HomeScreen = ({ onNewPost }: any) => {
           post={post}
           expandedPost={expandedPost}
           onLike={handleLike}
+          onSave={handleSave}
           onExpand={handleExpand}
           commentText={commentTexts[post.id] || ""}
           setCommentText={(text) => handleCommentTextChange(post.id, text)}
@@ -157,6 +149,20 @@ export const HomeScreen = ({ onNewPost }: any) => {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, padding: 16, backgroundColor: "#2c2c2cff" },
+  header: {
+    backgroundColor: "#2c2c2cff",
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginBottom: 16,
+    marginTop: 20,
+  },
+  headerText: {
+    color: "white",
+    fontSize: 32,
+    fontWeight: "bold",
+    marginTop: 20,
+    paddingLeft: 10,
+  },
   welcomeCard: {
     backgroundColor: "#2c2c2cff",
     padding: 20,
@@ -166,11 +172,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeTitle: { color: "#A78BFA", fontWeight: "bold", fontSize: 22 },
-  welcomeSubtitle: { color: "#A78BFA", opacity: 0.9 },
+  welcomeSubtitle: { color: "#A78BFA", opacity: 0.9, textAlign: "center", marginTop: 8 },
   postButton: {
     flexDirection: "row",
     justifyContent: "center",
     backgroundColor: "#A78BFA",
+    alignItems: "center",
     padding: 15,
     borderRadius: 12,
     marginBottom: 20,
