@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, FlatList, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Pressable,
+  FlatList,
+} from "react-native";
 import { MessageCircleMore } from "lucide-react-native";
 import ChatScreen from "./ChatScreen";
+import ChatBox from "./ChatBox"; // ✅ 使用单独的 ChatBox 文件
 
 // 模拟用户数据
 const usersData = [
@@ -47,7 +55,9 @@ const UserCard = ({ user, onLike, onDislike }: any) => (
     {/* 操作按钮 */}
     <View style={styles.actions}>
       <Pressable onPress={onDislike} style={[styles.button, styles.dislike]}>
-        <Text style={[styles.buttonText, { color: "#000" }]}>Not interested</Text>
+        <Text style={[styles.buttonText, { color: "#000" }]}>
+          Not interested
+        </Text>
       </Pressable>
       <Pressable onPress={onLike} style={[styles.button, styles.like]}>
         <Text style={styles.buttonText}>I Want To Be Friend !</Text>
@@ -56,20 +66,17 @@ const UserCard = ({ user, onLike, onDislike }: any) => (
   </View>
 );
 
-// 主屏幕
-const CardScreen = () => {
+const FriendsScreen = () => {
   const [currentView, setCurrentView] = useState("home");
   const [users, setUsers] = useState(usersData);
-  const [matchRequests, setMatchRequests] = useState<{ [key: string]: boolean }>({});
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const handleLike = (userId: string) => {
-    if (!matchRequests[userId]) {
-      Alert.alert("Message Sent", "You can send 1 message to start chatting!");
-      setMatchRequests((prev) => ({ ...prev, [userId]: true }));
-    } else {
-      Alert.alert("Chat Allowed", "You can now chat freely!");
+    const likedUser = users.find((u) => u.id === userId);
+    if (likedUser) {
+      setSelectedUser(likedUser);
+      setCurrentView("chatbox"); // 进入聊天框
     }
-    // 可以从列表中移除已处理用户
     setUsers((prev) => prev.filter((u) => u.id !== userId));
   };
 
@@ -77,24 +84,31 @@ const CardScreen = () => {
     setUsers((prev) => prev.filter((u) => u.id !== userId));
   };
 
-  // 添加调试函数
   const handleNavigateToChat = () => {
-    console.log("Navigate to chat pressed"); // 调试用
-    Alert.alert("Debug", "Button pressed!"); // 临时调试
     setCurrentView("chat");
   };
 
-  // 根据 currentView 状态决定显示哪个页面
+  // 跳转到 ChatScreen
   if (currentView === "chat") {
     return <ChatScreen onBackToHome={() => setCurrentView("home")} />;
   }
 
+  // 跳转到 ChatBox
+  if (currentView === "chatbox" && selectedUser) {
+    return <ChatBox user={selectedUser} onBack={() => setCurrentView("home")} />;
+  }
+
+  // 没有更多用户
   if (users.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.iconContainer}>
           <Pressable onPress={handleNavigateToChat} style={styles.navItem}>
-            <MessageCircleMore size={30} color="#A78BFA" style={{ marginTop: 30 }} />
+            <MessageCircleMore
+              size={30}
+              color="#A78BFA"
+              style={{ marginTop: 30 }}
+            />
           </Pressable>
         </View>
         <View style={styles.emptyContainer}>
@@ -104,6 +118,7 @@ const CardScreen = () => {
     );
   }
 
+  // 首页
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
@@ -120,15 +135,25 @@ const CardScreen = () => {
           UniTalk
         </Text>
         <Pressable onPress={handleNavigateToChat} style={[styles.navItem]}>
-          <MessageCircleMore size={30} color="#A78BFA" style={{ marginTop: 30 }} />
-          <Text style={{ color: "#A78BFA", fontSize: 12, marginTop: 5 }}>Chat</Text>
+          <MessageCircleMore
+            size={30}
+            color="#A78BFA"
+            style={{ marginTop: 30 }}
+          />
+          <Text style={{ color: "#A78BFA", fontSize: 12, marginTop: 5 }}>
+            Chat
+          </Text>
         </Pressable>
       </View>
       <FlatList
         data={users}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <UserCard user={item} onLike={() => handleLike(item.id)} onDislike={() => handleDislike(item.id)} />
+          <UserCard
+            user={item}
+            onLike={() => handleLike(item.id)}
+            onDislike={() => handleDislike(item.id)}
+          />
         )}
         contentContainerStyle={{ padding: 16 }}
       />
@@ -139,7 +164,7 @@ const CardScreen = () => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
-    borderRadius: 24, // 更圆
+    borderRadius: 24,
     padding: 20,
     marginVertical: 16,
     shadowColor: "#000",
@@ -160,17 +185,27 @@ const styles = StyleSheet.create({
     marginRight: 6,
     marginBottom: 6,
   },
-  tagText: {
-    fontSize: 14,
-    color: "#374151",
-    fontWeight: "500",
+  tagText: { fontSize: 14, color: "#374151", fontWeight: "500" },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
   },
-  actions: { flexDirection: "row", justifyContent: "space-between", marginTop: 14 },
-  button: { flex: 1, padding: 14, borderRadius: 12, alignItems: "center" },
+  button: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
   like: { backgroundColor: "#8B5CF6", marginLeft: 6 },
   dislike: { backgroundColor: "#F3F4F6", marginRight: 6 },
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
-  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", marginTop: 100 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 100,
+  },
   emptyText: { fontSize: 18, color: "#555" },
   container: {
     flex: 1,
@@ -191,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CardScreen;
+export default FriendsScreen;

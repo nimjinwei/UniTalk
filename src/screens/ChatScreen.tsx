@@ -34,7 +34,7 @@ const ChatScreen = ({ onBackToHome }:any) => {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title}>Friends</Text>
-            <Text style={styles.text}>这里可以看到你的朋友列表</Text>
+            <Text style={styles.text}>Chat with your friends</Text>
           </View>
         }
       />
