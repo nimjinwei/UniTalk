@@ -1,65 +1,51 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, Pressable, StyleSheet } from "react-native";
+import { ScrollView, View, Text, Pressable, StyleSheet, FlatList } from "react-native";
 import { Plus } from "lucide-react-native";
 import { PostCard } from "../components/PostCard";
 import NewPostScreen from "./NewPostScreen";
 
-export const HomeScreen = () => {
+// 定义 Post 类型（根据你现有数据字段）
+type Post = {
+  id: number;
+  CommunityName: string;
+  Title: string;
+  content: string;
+  isSaved: boolean;
+  tags: string[];
+  likes: number;
+  comments: {
+    id: number;
+    author: string;
+    content: string;
+    time: string;
+    avatar: string;
+  }[];
+  time: string;
+  anonymous: string;
+  avatar: string;
+  isLiked: boolean;
+};
+
+interface HomeScreenProps {
+  posts: Post[];
+  setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ posts, setPosts }) => {
   const [currentView, setCurrentView] = useState<"home" | "newPost">("home");
   const [expandedPost, setExpandedPost] = useState<number | null>(null);
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      CommunityName: "Multimedia University",
-      Title: "今天的心情",
-      content: "今天的天气真好 ☀️，适合出去走走！",
-      isSaved: false,
-      tags: ["生活", "天气"],
-      likes: 12,
-      comments: [
-        {
-          id: 1,
-          author: "同学A",
-          content: "真的！阳光超舒服",
-          time: "1小时前",
-          avatar: "#F59E0B",
-        },
-      ],
-      time: "2小时前",
-      anonymous: "匿名同学",
-      avatar: "#3B82F6",
-      isLiked: false,
-    },
-    {
-      id: 2,
-      CommunityName: "Coding",
-      Title: "学习React Native的感受",
-      content: "第一次尝试 React Native，感觉还不错 😎",
-      isSaved: true,
-      tags: ["技术", "学习"],
-      likes: 20,
-      comments: [],
-      time: "3小时前",
-      anonymous: "匿名同学",
-      avatar: "#10B981",
-      isLiked: true,
-    },
-  ]);
-
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
 
   // 点赞
   const handleLike = (id: number) => {
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === id
-          ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 }
-          : p
+        p.id === id ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p
       )
     );
   };
 
-  // 展开评论
+  // 展开/收起评论区
   const handleExpand = (id: number) => {
     setExpandedPost((prev) => (prev === id ? null : id));
   };
@@ -69,14 +55,9 @@ export const HomeScreen = () => {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, isSaved: !p.isSaved } : p)));
   };
 
-  // 评论输入
-  const handleCommentTextChange = (id: number, text: string) => {
-    setCommentTexts((prev) => ({ ...prev, [id]: text }));
-  };
-
   // 发表评论
   const handleComment = (postId: number) => {
-    const text = commentTexts[postId]?.trim();
+    const text = (commentTexts[postId] || "").trim();
     if (!text) return;
     setPosts((prev) =>
       prev.map((p) =>
@@ -85,13 +66,7 @@ export const HomeScreen = () => {
               ...p,
               comments: [
                 ...p.comments,
-                {
-                  id: Date.now() + Math.random(),
-                  author: "我",
-                  content: text,
-                  time: "刚刚",
-                  avatar: "#6366F1",
-                },
+                { id: Date.now(), author: "我", content: text, time: "刚刚", avatar: "#8B5CF6" },
               ],
             }
           : p
@@ -101,7 +76,7 @@ export const HomeScreen = () => {
   };
 
   // 处理新帖子
-  const handleAddPost = (newPost: any) => {
+  const handleAddPost = (newPost: Post) => {
     setPosts((prev) => [newPost, ...prev]);
     setCurrentView("home");
   };
@@ -128,6 +103,7 @@ export const HomeScreen = () => {
         <Text style={styles.postButtonText}>Share your idea !</Text>
       </Pressable>
 
+      {/* 使用 FlatList 或 map 都可，这里用 map 保持之前风格 */}
       {posts.map((post) => (
         <PostCard
           key={post.id}
@@ -137,7 +113,7 @@ export const HomeScreen = () => {
           onSave={handleSave}
           onExpand={handleExpand}
           commentText={commentTexts[post.id] || ""}
-          setCommentText={(text) => handleCommentTextChange(post.id, text)}
+          setCommentText={(text) => setCommentTexts((prev) => ({ ...prev, [post.id]: text }))}
           onComment={handleComment}
         />
       ))}
@@ -184,3 +160,5 @@ const styles = StyleSheet.create({
   },
   postButtonText: { color: "#4C1D95", marginLeft: 8, fontWeight: "600" },
 });
+
+export default HomeScreen;

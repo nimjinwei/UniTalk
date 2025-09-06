@@ -73,7 +73,7 @@ const NewPostScreen = ({ onSubmit, onCancel }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#2c2c2cff" },
+  container: { flex: 1, padding: 20, marginTop: 35, backgroundColor: "#2c2c2cff" },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "white" },
   label: { marginTop: 10, marginBottom: 6, fontSize: 16, color: "white" },
   pickerWrapper: { backgroundColor: "white", borderRadius: 8, marginBottom: 10 },

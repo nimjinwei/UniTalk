@@ -1,13 +1,15 @@
+// screens/ExploreScreen.tsx
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, ScrollView, Pressable } from "react-native";
 import { Search } from "lucide-react-native";
 import { PostCard } from "../components/PostCard";
+import { Post } from "../data/dummyPosts";
 
 export const ExploreScreen = () => {
   const [search, setSearch] = useState("");
   const [expandedPost, setExpandedPost] = useState<number | null>(null);
-  const [commentText, setCommentText] = useState("");
-  const [posts, setPosts] = useState([
+  const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
+  const [posts, setPosts] = useState<Post[]>([
     {
       id: 1,
       CommunityName: "React Native",
@@ -41,68 +43,39 @@ export const ExploreScreen = () => {
     },
   ]);
 
-  // 推荐社区数据
   const communities = [
     { id: "1", name: "Multimedia University", members: 1200 },
     { id: "2", name: "Sunway University", members: 950 },
     { id: "3", name: "Homework Help", members: 2000 },
   ];
 
-  // 点赞逻辑
   const handleLike = (id: number) => {
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likes: p.isLiked ? p.likes - 1 : p.likes + 1,
-            }
-          : p
+        p.id === id ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p
       )
     );
   };
 
-  // 保存逻辑
   const handleSave = (id: number) => {
-  setPosts((prev) =>
-    prev.map((p) =>
-      p.id === id ? { ...p, isSaved: !p.isSaved } : p
-    )
-  );
-};
-
-  // 展开评论区
-  const handleExpand = (id: number) => {
-    setExpandedPost(expandedPost === id ? null : id);
-    setCommentText(""); // 切换时清空输入框
+    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, isSaved: !p.isSaved } : p)));
   };
 
-  // 评论
-  const handleComment = (postId: number) => {
-    if (!commentText.trim()) return;
+  const handleExpand = (id: number) => {
+    setExpandedPost(expandedPost === id ? null : id);
+  };
 
+  const handleComment = (postId: number) => {
+    const text = (commentTexts[postId] || "").trim();
+    if (!text) return;
     setPosts((prev) =>
       prev.map((p) =>
         p.id === postId
-          ? {
-              ...p,
-              comments: [
-                ...p.comments,
-                {
-                  id: Date.now(),
-                  author: "You",
-                  content: commentText,
-                  time: "Just now",
-                  avatar: "#fbbf24",
-                },
-              ],
-            }
+          ? { ...p, comments: [...p.comments, { id: Date.now(), author: "You", content: text, time: "Just now", avatar: "#fbbf24" }] }
           : p
       )
     );
-
-    setCommentText("");
+    setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
   };
 
   return (
@@ -139,13 +112,13 @@ export const ExploreScreen = () => {
           <PostCard
             key={p.id}
             post={p}
-            expandedPost={expandedPost}
+            isExpanded={expandedPost === p.id}
             onLike={handleLike}
-            onSave={handleSave} 
-            onExpand={handleExpand}
-            commentText={commentText}
-            setCommentText={setCommentText}
-            onComment={handleComment}
+            onSave={handleSave}
+            onExpand={() => handleExpand(p.id)}
+            commentText={commentTexts[p.id] || ""}
+            setCommentText={(text) => setCommentTexts((prev) => ({ ...prev, [p.id]: text }))}
+            onComment={() => handleComment(p.id)}
           />
         ))}
       </View>
@@ -154,12 +127,7 @@ export const ExploreScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#2c2c2cff",
-    paddingHorizontal: 15,
-    paddingTop: 50,
-  },
+  container: { flex: 1, backgroundColor: "#2c2c2cff", paddingHorizontal: 15, paddingTop: 50 },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -169,19 +137,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 20,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#111827",
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
+  searchInput: { flex: 1, fontSize: 15, color: "#111827" },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#fff" },
   communityCard: {
     backgroundColor: "#A78BFA",
     padding: 12,
@@ -191,12 +149,8 @@ const styles = StyleSheet.create({
     borderColor: "#111111",
     width: 180,
   },
-  communityName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  communityMembers: {
-    fontSize: 13,
-    color: "#111111",
-  },
+  communityName: { fontSize: 16, fontWeight: "600" },
+  communityMembers: { fontSize: 13, color: "#111111" },
 });
+
+export default ExploreScreen;

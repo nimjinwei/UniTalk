@@ -23,7 +23,7 @@ const ChatScreen = ({ onBackToHome }:any) => {
   return (
     <View style={styles.container}>
       <Pressable onPress={onBackToHome} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Back to Cards</Text>
+        <Text style={styles.backButtonText}>← Back to Friends</Text>
       </Pressable>
       
       <FlatList
