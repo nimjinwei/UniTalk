@@ -1,3 +1,6 @@
+# Track 1： Student Lifestyle
+# Problem Statement: For most students, common sources of stress include academics, relationships, and mental health. However, there is often a lack of a safe community where they can express themselves anonymously and support each other. Existing social platforms don’t offer true anonymity, so many students hesitate to share their real thoughts or struggles.
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
